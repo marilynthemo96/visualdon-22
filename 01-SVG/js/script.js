@@ -7,3 +7,13 @@ rectangles.forEach(rectangle => {
         rectangle.classList.toggle('highlight')
     })
 })
+
+const donuts = document.querySelectorAll('.donut')
+
+donuts.forEach(donut => {
+    donut.addEventListener('mouseover', evt => {
+        evt = evt.target;
+        console.log(evt);
+        donut.classList.toggle('change')
+    })
+})
