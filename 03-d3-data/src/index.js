@@ -38,21 +38,26 @@ Promise.all([ //Pour importer plusieurs datasets
 
             const post_Filtered = posts.filter(p => p.userId == d.id)//...  contiennent les valeurs filtrées des posts : Forcément 10 car 10 users, les posts triés par users
 
-            return { ["id"]: [d.id], ["nom d'utilisateur"]: [d.username], ["Ville"]: [d.address.city], ["Nom compagnie"]: [d.company.name], ["Titres posts"]: [...post_Filtered] }
+            const values = {
+                "id" : d.id,
+                "nom_dutilisateur" : d.username,
+                "Ville" : d.address.city,
+                "Nom_compagnie" : d.company.name,
+                "Titres_posts" : [...post_Filtered]
+
+            }
+            return values
+            //À la place de faire l'objet dans le return
+            //return { ["id"]: [d.id], ["nom d'utilisateur"]: [d.username], ["Ville"]: [d.address.city], ["Nom compagnie"]: [d.company.name], ["Titres posts"]: [...post_Filtered] }
 
         });
 
-
+        console.log(tableau);
 
         //Variable pour le nombre de post par users
-        const nbusers = d3.count(users);
-        const nbposts = d3.count(posts);
-
-        console.log(users);
-        console.log(nbusers);
-        console.log(nbposts);
-
-
+        // const nbusers = d3.count(users);
+        // const nbposts = d3.count(posts);
+     
         //Solution 2
         users.forEach(user => {
             let compteurParUser = 0;
@@ -67,17 +72,14 @@ Promise.all([ //Pour importer plusieurs datasets
             const svg = d3.select("body")
                 .append("svg")
                 .attr("width", 400)
-                .attr("height", 400)
+                .attr("height", 150)
                 .append("text")
                 .text(`${user.name} a écrit ${compteurParUser} article(s).`)
                 .attr("x", "65")
                 .attr("y", "110")
-
-
         })
 
-
-        // * Trouvez le **user** qui a écrit le texte le plus long dans **posts.body**
+        // * Trouvez le **user** qui a écrit le texte le plus long dans **posts.body** // Utile si on veut mettre en évidence les extrêmes dans les données
         let postLePlusLong = 'abc';
         let postLePlusLongUserId = 0;
 
@@ -89,11 +91,7 @@ Promise.all([ //Pour importer plusieurs datasets
                 postLePlusLongUserId = post.userId
             }
         })
-
-
-        console.log(postLePlusLong);
-        console.log(postLePlusLongUserId);
-        let userPostLePlusLong = users[postLePlusLongUserId - 1].name;
+        let userPostLePlusLong = users[postLePlusLongUserId-1].name;
 
         d3.select("body")
             .append("div")
@@ -105,8 +103,9 @@ Promise.all([ //Pour importer plusieurs datasets
 
         // * Dessinez un graphique en bâton en ayant sur l'axe *x* les utilisateurs et *y* le nombre de posts
 
+
         let margin = { top: 20, right: 10, bottom: 60, left: 60 };
-        let width = 1500 - margin.left - margin.right,
+        let width = 1000 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
 
         d3.select("body")
@@ -115,39 +114,47 @@ Promise.all([ //Pour importer plusieurs datasets
 
         let svg = d3.select("#graph")
             .append("svg")
-            .attr("width", width + margin.left + margin.right)
+            .attr("width", width + margin.left + margin.right )
             .attr("height", height + margin.top + margin.bottom)
-            .append("g")
+            .append("g") 
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-        let x = d3.scaleBand()
-            .domain(tableau.map(function (d) { return d["nom_utilisateur"]; }))
-            .range([1000, 0]);
 
-        let y = d3.scaleLinear()
-            .domain([0, 10])
-            .range([height, 0]);
+            //Définition des échelles 
+        let x = d3.scaleBand() //echelle//Pour avoir le nom en dessous de la band (colonne) pour les données ordinales
+            .domain(tableau.map(d => d.nom_dutilisateur ))
+            .range([0, width]); //Pour avoir les différents traits
 
-        svg.append("g")
+        let y = d3.scaleLinear() //echelle
+            .domain([0, 10]) //Pour avoir les différents traits
+            .range([height, 0]); //Inverser l'ordre pour les données quantitatives //range doit être contenu dans le canva
+            console.log(y(0));
+
+        let gfg = x.bandwidth()
+        console.log(gfg)
+
+             //Création des axes    
+        svg.append("g") //Pour créer les axes il faut appeler les échelles correspondantes
             .call(d3.axisLeft(y));
 
-        svg.append("g")
-            .attr("transform", "translate(0," + height + ")")
+        svg.append("g") //Pour créer les axes il faut appeler les échelles correspondantes
+            .attr("transform", "translate(0," + height + ")") //Sinon l'axe est en haut...
             .call(d3.axisBottom(x))
             .selectAll("text")
-            .attr("transform", "translate(-2,10)")
-
-        svg.selectAll("bars")
-            .data(tableaus)
+            .attr("transform", "translate(-2,10)") //Pour décaler les textes un peu plus bas
+            console.log(tableau.map(d=>y(d.Titres_posts.length)))
+           
+            svg.selectAll("bars")
+            .data(tableau)
             .enter()
-            .append("rect")
-            .attr("x", function (d) { return x(d["nom_utilisateur"]) + 30; })
-            .attr("y", function (d) { return y(d["posts"].length); })
-            .attr("width", "40px")
-            .attr("height", function (d) { return height - y(d["posts"].length); })
+            .append("rect") //pour que ce soit des lignes
+            .attr('x', (d,i) => x(d.nom_dutilisateur) + 25) //Pour chaque élément d correspondant aux nombrs d'users, avoir une distance de i*30
+            .attr('y', d => y(d.Titres_posts.length)) //Pourquoi on ne commence pas à zéro vu que l'on a inversé ?
+            .attr("height", d => y(0) - y(d.Titres_posts.length)) //ça je suis d'accord
             .attr("fill", `#${Math.floor(Math.random() * 16777215).toString(16)}`)
+            .attr("width", x.bandwidth()/2)
 
-
+          
     })
 
 
