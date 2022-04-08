@@ -105,8 +105,8 @@ let width = 1000 - margin.left - margin.right,
 
 const rangeX = [0, 500, 1000, 2000, 4000, 8000, "16k", "32k", "64k", "128k"]
 
-let x = d3.scalePoint()
-    .domain(rangeX.map(d => d))
+let x = d3.scaleLinear()
+    .domain([0, 128000])
     .range([0, width]);
 
 let y = d3.scaleLinear()
@@ -131,11 +131,21 @@ d3.select("body")
     .attr('id', 'graph')
 
 let svg = d3.select("#graph")
+
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+
+svg.append('text')
+    .text("2021")
+    .attr("x", "250")
+    .attr("y", "300")
+    .style("font-size", "200")
+    .style("text-decoration", "bold")
+    .style("fill", `#${Math.floor(Math.random() * 16777215).toString(16)}`)
 
 
 
@@ -165,7 +175,7 @@ svg.selectAll("cercles")
     .style("opacity", "0.7")
     .attr("stroke", "black")
     .style("stroke-width", "2px")
-  
+
 
 
 
